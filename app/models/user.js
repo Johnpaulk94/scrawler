@@ -66,6 +66,80 @@ const userSchema = new Schema({
     ]
 })
 
+//pre-hooks
+userSchema.pre('save',function(next) {
+    const user = this
+    if(user.isNew) {
+        bcyrptjs.genSalt(10)
+            .then(function(salt) {
+                bcyrptjs.hash(user.password,salt)
+                    .then(function(encryptedPassword) {
+                        user.password = encryptedPassword
+                        next()
+                    })
+                    .catch(err => {
+                        console.log(err)
+                    })
+            })
+    } else {
+        next()
+    }
+    
+})
 
+//own instance method
+userSchema.methods.generateToken = function() {
+    const user = this
+    const tokenData = {
+        _id : user._id,
+        username: user.username,
+        createdAt: Number(new Date())
+    }
+    const token = jwt.sign(tokenData,'jwt@123')
+    user.tokens.push({token})
+    return user.save()
+            .then(function(user) {
+                user = _.pick(user,['_id','email','username'])
+                return Promise.resolve({user, token})
+            })
+            .catch(err => {
+                return Promise.reject(err)
+            })
+}
+
+//own static methods
+userSchema.statics.findByCredentials = function(body) {
+    const User = this
+    return User.findOne(_.pick(body,['username','email']))
+                .then(function(user) {
+                    if(!user) {
+                        return Promise.reject('invalid email or password')
+                    }
+                    return bcyrptjs.compare(body.password,user.password)
+                        .then(result => {
+                            if(result) {
+                                return Promise.resolve(user)
+                            } else {
+                                return Promise.reject('invalid email or password')
+                            }
+                        })
+                })
+}
+
+userSchema.statics.findByToken = function(token) {
+    const User = this
+    let tokenData
+    try {
+        tokenData = jwt.verify(token,'jwt@123')
+        console.log(tokenData)
+    } catch(err) {
+        console.log('token couldnt be verified')
+        return Promise.reject(err)
+    }
+    return User.findOne({
+        _id : tokenData._id,
+        'tokens.token': token
+    })
+}
 const User = mongoose.model('User',userSchema)
 module.exports = User
