@@ -15,11 +15,12 @@ module.exports.create = (req,res) => {
         })
 }
 
-module.exports.list= (req,res) => {
-    Post.find({ user : req.user._id })
-        .then(posts => {
-            if(posts) {
-                res.send(posts)
+module.exports.userpostslist= (req,res) => {
+    const id = req.params.id
+    Post.find({user: id}).populate('user',["id","username"])
+        .then(userposts => {
+            if(userposts) {
+                res.send(userposts)
             }
         })
         .catch(err => {
@@ -28,7 +29,7 @@ module.exports.list= (req,res) => {
 }
 
 module.exports.browse=(req,res) => {
-    Post.find()
+    Post.find().populate('user',["id","username"])
         .then(posts => {
             if(posts) {
                 res.send(posts)

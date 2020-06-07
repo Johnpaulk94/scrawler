@@ -8,5 +8,13 @@ const userReducer = (state = userInitialState, action) => {
         case 'REMOVE_USER': {
             return {}
         }
+        case 'EDIT_USER' : {
+            return { ...action.payload }
+        }
+        default : {
+            return {...state}
+        }
     }
 }
+
+export default userReducer

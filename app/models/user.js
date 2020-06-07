@@ -131,9 +131,7 @@ userSchema.statics.findByToken = function(token) {
     let tokenData
     try {
         tokenData = jwt.verify(token,'jwt@123')
-        console.log(tokenData)
     } catch(err) {
-        console.log('token couldnt be verified')
         return Promise.reject(err)
     }
     return User.findOne({

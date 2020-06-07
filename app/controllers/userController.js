@@ -42,10 +42,9 @@ module.exports.update= function(req,res) {
 
 }
 
-module.exports.logout= function(req,res) {
+module.exports.logout = function(req,res) {
+    console.log('request',req.body)
     const {user, token} = req
-    console.log('user',user)
-    console.log('token',token)
     User.findByIdAndUpdate(user._id,{$pull: { tokens: {token: token }}})
         .then(function(){
             res.send({notice: 'successfully logged out'})
